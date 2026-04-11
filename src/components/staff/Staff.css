@@ -1,0 +1,187 @@
+/* Staff Flip Cards */
+.staff-grid-flip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+.staff-card-flip {
+  background-color: transparent;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  perspective: 1200px;
+}
+
+.staff-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.staff-card-flip:hover .staff-card-inner {
+  transform: rotateY(180deg);
+}
+
+.staff-card-front, .staff-card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+/* Front Face */
+.staff-card-front {
+  background-color: var(--color-surface-soft);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.staff-photo-wrapper {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.staff-photo-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+}
+
+.staff-info-front {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  width: max-content;
+  max-width: calc(100% - 1.5rem);
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  text-align: left;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  z-index: 5;
+}
+
+.staff-name-modern {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #071125;
+}
+
+.staff-role-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #ff3b30;
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 6;
+  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Back Face */
+.staff-card-back {
+  background: linear-gradient(135deg, #071125 0%, #0d2142 100%);
+  color: white;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  border: 1px solid rgba(0, 242, 255, 0.2);
+}
+
+.staff-back-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.staff-back-header h4 {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #00f2ff;
+  font-weight: 700;
+}
+
+.staff-id-tag {
+  font-family: monospace;
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+.staff-stats-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 0.5rem;
+  text-align: left;
+}
+
+.staff-stat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.6;
+}
+
+.stat-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.highlight-gold { color: #f9c345; }
+.highlight-cyan { color: #00f2ff; }
+
+.staff-bio-back {
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+  text-align: left;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+@media (max-width: 1100px) {
+  .staff-grid-flip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .staff-grid-flip {
+    grid-template-columns: 1fr;
+  }
+}

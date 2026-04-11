@@ -1,0 +1,186 @@
+/* Footer Redesign */
+.site-footer {
+  background: #071125;
+  color: white;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.footer-top {
+  padding: 5rem 0;
+}
+
+.footer-grid-premium {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  gap: 4rem;
+}
+
+.footer-col {
+  min-width: 0;
+}
+
+.brand-col {
+  padding-right: 1rem;
+}
+
+.contact-col {
+  justify-self: stretch;
+}
+
+.brand--footer {
+  align-items: flex-start;
+}
+
+.brand--footer .brand-copy {
+  display: flex;
+}
+
+.brand--footer .brand-mark {
+  height: 38px;
+}
+
+.footer-brand-desc {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 1.5rem;
+  max-width: 320px;
+}
+
+.footer-label-modern {
+  font-family: 'Sora', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #00f2ff;
+  margin-bottom: 2rem;
+  font-weight: 800;
+}
+
+.footer-nav-modern {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.footer-link-modern {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 200ms ease, transform 200ms ease;
+  display: inline-block;
+}
+
+.footer-link-modern:hover {
+  color: white;
+  transform: translateX(4px);
+}
+
+.footer-contact-item {
+  margin-bottom: 1.5rem;
+}
+
+.footer-contact-item:last-child {
+  margin-bottom: 0;
+}
+
+.footer-contact-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.4);
+  margin-bottom: 0.4rem;
+}
+
+.footer-contact-value {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: white;
+}
+
+.footer-contact-detail {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 0.2rem;
+}
+
+.footer-contact-link-premium {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #00f2ff;
+  text-decoration: none;
+  transition: opacity 200ms ease;
+}
+
+.footer-contact-link-premium:hover {
+  opacity: 0.8;
+}
+
+.footer-bottom-premium {
+  padding: 2.5rem 0 7rem; /* Increased bottom padding for dock */
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+
+.footer-bottom-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copyright-modern {
+  font-size: 0.88rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+}
+
+.copyright-modern strong {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.copyright-modern span {
+  display: inline-block;
+  margin-left: 0.5rem;
+}
+
+.footer-social-placeholders {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.social-placeholder-icon {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.social-placeholder-icon:hover {
+  color: #00f2ff;
+}
+
+@media (max-width: 1200px) {
+  .footer-grid-premium {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+  }
+}
+
+@media (max-width: 650px) {
+  .footer-grid-premium {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .footer-bottom-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
