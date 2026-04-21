@@ -9,6 +9,9 @@ import { login, logout, getSession } from "../utils/auth.js";
 export function initAuthUI() {
   const authBtn = $("#auth-member-btn");
   if (!authBtn) return;
+  if (authBtn.dataset.authBound === "true") return;
+
+  authBtn.dataset.authBound = "true";
 
   authBtn.addEventListener("click", async () => {
     const session = await getSession();

@@ -3,9 +3,12 @@ import { $$, showToast } from "../utils/dom.js";
 /**
  * Handles professional form submissions with feedback
  */
-export function initForms() {
-  const forms = $$("[data-form]");
+export function initForms(root = document) {
+  const forms = $$("[data-form]", root);
   forms.forEach((form) => {
+    if (form.dataset.formBound === "true") return;
+    form.dataset.formBound = "true";
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
 

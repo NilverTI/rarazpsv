@@ -10,6 +10,7 @@ const TRUCKY_HEADERS = {
 const SCHEMA_VERSION = "drivers-v3";
 const TRUCKY_CACHE_TTL_MS = 10 * 60 * 1000;
 const TRUCKY_CACHE_KEY_PREFIX = "raraz.trucky.companySnapshot";
+const REQUEST_TIMEOUT_MS = 8000;
 const SNAPSHOT_REQUESTS = new Map();
 
 function formatRoleLabel(roleName) {
@@ -94,23 +95,20 @@ function getJobDistanceKm(job) {
 
 
 function getCompanyCacheKey(companyId) {
-  return `trucky_snapshot_${companyId}`;
-}
-
-function isCacheFresh(entry) {
-  if (!entry) return false;
-  // Note: cache.get already handles TTL, but trucky has its own valid period logic
-  // we'll keep it consistent with the central cache for now.
-  return true;
+  return `${TRUCKY_CACHE_KEY_PREFIX}:${SCHEMA_VERSION}:${companyId}`;
 }
 
 async function fetchJson(url, errorLabel) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
   try {
     const response = await fetch(url, { 
       headers: TRUCKY_HEADERS,
       mode: 'cors',
       credentials: 'omit',
-      referrerPolicy: 'no-referrer'
+      referrerPolicy: 'no-referrer',
+      signal: controller.signal,
     });
     
     if (!response.ok) {
@@ -123,6 +121,8 @@ async function fetchJson(url, errorLabel) {
     const errorType = e.name === 'TypeError' ? 'BLOCKING_OR_NETWORK' : 'API_ERROR';
     console.warn(`Trucky API (${errorType}): ${errorLabel}.`, e.message);
     throw e;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

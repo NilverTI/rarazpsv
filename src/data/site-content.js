@@ -20,9 +20,9 @@ export const siteContent = {
     primaryCta: { label: "Reservar ahora", href: "booking.html" },
     secondaryCta: { label: "Ver rutas", href: "#destinos" },
     stats: [
-      { value: "+1M", label: "km recorridos" },
-      { value: "48", label: "conductores activos" },
-      { value: "+3K", label: "servicios realizados" },
+      { key: "kmRecorridos", value: "+1M", label: "km recorridos" },
+      { key: "conductoresActivos", value: "48", label: "conductores activos" },
+      { key: "serviciosRealizados", value: "+3K", label: "servicios realizados" },
     ],
     spotlight: [
       { label: "Capacidad", value: "15 a 48 pax" },
@@ -84,7 +84,7 @@ export const siteContent = {
     {
       title: "Lima",
       badge: "Metropolitano",
-      image: "destination_lima_1776062140871.png",
+      image: "/assets/images/lugares/lima.jpg",
       alt: "Lima Cityscape",
       description: "Conexiones rapidas y seguras a la capital, con la mejor logistica urbana.",
       meta: ["Business", "Directo"],
@@ -93,7 +93,7 @@ export const siteContent = {
     {
       title: "Huaraz",
       badge: "Aventura",
-      image: "destination_huaraz_1776062250512.png",
+      image: "/assets/images/lugares/huaraz.jpg",
       alt: "Huaraz Mountains",
       description: "Rutas escenicas por la Cordillera Blanca con seguridad total en altura.",
       meta: ["Turismo", "Andes"],
@@ -102,7 +102,7 @@ export const siteContent = {
     {
       title: "Huancayo",
       badge: "Valle",
-      image: "destination_huancayo_1776062332873.png",
+      image: "/assets/images/lugares/huancayo.jpg",
       alt: "Huancayo Mantaro Valley",
       description: "Viajes confortables al corazon del Valle del Mantaro.",
       meta: ["Tradicion", "Confort"],
@@ -111,7 +111,7 @@ export const siteContent = {
     {
       title: "Carhuamayo",
       badge: "Puna",
-      image: "destination_carhuamayo_1776062395660.png",
+      image: "/assets/images/lugares/carhuamayo.jpg",
       alt: "Carhuamayo Landscape",
       description: "Traslados especializados a las zonas mas altas con precision y cuidado.",
       meta: ["Logistica", "Cuidado"],

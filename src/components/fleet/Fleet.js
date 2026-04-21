@@ -20,7 +20,7 @@ export function renderFleet({ fleet }) {
               (item) => `
                 <article class="fleet-card-premium" data-reveal>
                   <div class="fleet-image-wrapper">
-                    <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" loading="lazy">
+                    <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" loading="lazy" decoding="async" fetchpriority="low">
                     <span class="fleet-badge-accent">${escapeHtml(item.accent)}</span>
                   </div>
                   <div class="fleet-content-glass">

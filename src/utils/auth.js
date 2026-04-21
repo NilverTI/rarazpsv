@@ -8,34 +8,64 @@ import { cache } from "./cache.js";
 // Configuration - Set these values in your environment or replace them here
 const SUPABASE_URL = "https://your-project.supabase.co"; 
 const SUPABASE_ANON_KEY = "your-anon-key";
+const SUPABASE_SDK_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 
-let supabaseClient = null;
+let supabaseClientPromise = null;
+let supabaseLoaderPromise = null;
 
 function hasValidConfig() {
   return SUPABASE_URL && SUPABASE_URL !== "https://your-project.supabase.co" && 
          SUPABASE_ANON_KEY && SUPABASE_ANON_KEY !== "your-anon-key";
 }
 
+function isSupabaseLoaded() {
+  return typeof window !== "undefined" && typeof window.supabase !== "undefined";
+}
+
+function loadSupabaseScript() {
+  if (typeof window === "undefined" || !hasValidConfig()) return Promise.resolve(null);
+  if (isSupabaseLoaded()) return Promise.resolve(window.supabase);
+  if (supabaseLoaderPromise) return supabaseLoaderPromise;
+
+  supabaseLoaderPromise = new Promise((resolve, reject) => {
+    const existingScript = document.querySelector(`script[src="${SUPABASE_SDK_URL}"]`);
+    if (existingScript) {
+      existingScript.addEventListener("load", () => resolve(window.supabase), { once: true });
+      existingScript.addEventListener("error", () => reject(new Error("SUPABASE_SDK_LOAD_FAILED")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = SUPABASE_SDK_URL;
+    script.async = true;
+    script.onload = () => resolve(window.supabase);
+    script.onerror = () => reject(new Error("SUPABASE_SDK_LOAD_FAILED"));
+    document.head.appendChild(script);
+  }).catch((error) => {
+    console.warn("Supabase SDK could not be loaded. Auth will stay disabled.", error.message);
+    return null;
+  });
+
+  return supabaseLoaderPromise;
+}
+
 /**
  * Initialize the Supabase Client
- * Note: Assumes @supabase/supabase-js is loaded via CDN or npm
+ * Loads the SDK on demand so regular visitors don't pay the auth bundle cost.
  */
 export function initAuth() {
-  if (typeof window.supabase === "undefined") {
-    console.warn("Supabase library not loaded. Auth will be disabled.");
-    return null;
-  }
-
   if (!hasValidConfig()) {
-    console.warn("Supabase credentials not configured. Auth will be disabled.");
-    return null;
+    return Promise.resolve(null);
   }
 
-  if (!supabaseClient) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!supabaseClientPromise) {
+    supabaseClientPromise = loadSupabaseScript().then((sdk) => {
+      if (!sdk) return null;
+      return sdk.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    });
   }
 
-  return supabaseClient;
+  return supabaseClientPromise;
 }
 
 /**
@@ -46,7 +76,7 @@ export async function getSession() {
   const cachedSession = cache.get("auth_session");
   if (cachedSession) return cachedSession;
 
-  const client = initAuth();
+  const client = await initAuth();
   if (!client) return null;
 
   const { data: { session }, error } = await client.auth.getSession();
@@ -73,7 +103,7 @@ export async function isAdmin() {
  * Login function
  */
 export async function login(email, password) {
-  const client = initAuth();
+  const client = await initAuth();
   if (!client) throw new Error("Auth client not initialized");
 
   const { data, error } = await client.auth.signInWithPassword({ email, password });
@@ -87,7 +117,7 @@ export async function login(email, password) {
  * Logout function
  */
 export async function logout() {
-  const client = initAuth();
+  const client = await initAuth();
   if (client) {
     await client.auth.signOut();
   }

@@ -26,6 +26,14 @@
   padding-bottom: 8rem;
 }
 
+@supports (content-visibility: auto) {
+  .section:not(.section--hero),
+  .section--ticker {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+  }
+}
+
 .skip-link {
   position: fixed;
   top: 1rem;

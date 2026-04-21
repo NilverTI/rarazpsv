@@ -1,12 +1,18 @@
 import { $, setMenuState } from "../utils/dom.js";
 
+let isMenuInitialized = false;
+
 /**
  * Handles mobile menu toggle and responsive state
  */
 export function initMenu() {
+  if (isMenuInitialized) return;
+
   const toggleButton = $("[data-menu-toggle]");
   const scrim = $("[data-menu-scrim]");
   if (!toggleButton || !scrim) return;
+
+  isMenuInitialized = true;
 
   toggleButton.addEventListener("click", () => {
     const isOpen = toggleButton.getAttribute("aria-expanded") === "true";

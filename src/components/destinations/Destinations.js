@@ -20,7 +20,7 @@ export function renderDestinations({ destinations }) {
               (dest) => `
                 <article class="destination-card-modern" data-reveal>
                   <div class="dest-image-wrapper">
-                    <img src="${escapeHtml(dest.image)}" alt="${escapeHtml(dest.alt)}" loading="lazy">
+                    <img src="${escapeHtml(dest.image)}" alt="${escapeHtml(dest.alt)}" loading="lazy" decoding="async" fetchpriority="low">
                     <span class="dest-badge-high">${escapeHtml(dest.badge)}</span>
                   </div>
                   <div class="dest-content-glass">

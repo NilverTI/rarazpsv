@@ -4,18 +4,16 @@
  * Architecture: IndexedDB (Collection) + localStorage (Metadata)
  */
 
-import { cache } from "./cache.js";
 import { syncCompanySnapshot } from "./trucky.js";
 
 const DB_NAME = "RarazDriversDB";
 const STORE_NAME = "drivers";
 const DB_VERSION = 1;
 const CACHE_METADATA_KEY = "drivers_sync_meta";
-const SCHEMA_VERSION = "drivers-v4";
+const SCHEMA_VERSION = "drivers-v5";
 
 // TTL Settings
 const TTL_FRESH = 5 * 60 * 1000;      // 5 min - Don't even ask network
-const TTL_EXPIRED = 30 * 60 * 1000;   // 30 min - High priority revalidate
 
 let dbPromise = null;
 let inFlightSync = null;
@@ -66,12 +64,29 @@ async function getDB() {
  * Metadata Management Layer (Cross-Browser Safe)
  */
 export function getDriversMetadata() {
+  const defaultMetadata = {
+    lastSync: 0,
+    schemaVersion: SCHEMA_VERSION,
+    etag: null,
+    heroStats: null,
+  };
+
   try {
     const meta = localStorage.getItem(CACHE_METADATA_KEY);
-    return meta ? JSON.parse(meta) : { lastSync: 0, schemaVersion: SCHEMA_VERSION, etag: null };
+    if (!meta) return defaultMetadata;
+
+    const parsed = JSON.parse(meta);
+    if (parsed?.schemaVersion !== SCHEMA_VERSION) {
+      return defaultMetadata;
+    }
+
+    return {
+      ...defaultMetadata,
+      ...parsed,
+    };
   } catch (e) {
     // Handle Privacy/Security restricted storage access
-    return { lastSync: 0, schemaVersion: SCHEMA_VERSION, etag: null, restricted: true };
+    return { ...defaultMetadata, restricted: true };
   }
 }
 
@@ -80,6 +95,7 @@ function saveDriversMetadata(data) {
     localStorage.setItem(CACHE_METADATA_KEY, JSON.stringify({
       ...getDriversMetadata(),
       ...data,
+      schemaVersion: SCHEMA_VERSION,
       lastSync: Date.now()
     }));
   } catch (e) {
@@ -159,8 +175,8 @@ export async function saveConductoresToCache(drivers) {
 function enrichDriverCollection(rawDrivers) {
   if (!Array.isArray(rawDrivers)) return [];
   
-  return rawDrivers.map(d => ({
-    id: String(d.truckyId || `psv-${Math.random().toString(36).substr(2, 9)}`),
+  return rawDrivers.map((d, index) => ({
+    id: createStableDriverId(d, index),
     nombre: d.name || "Staff",
     rol: d.role || "Conductor",
     foto: d.image,
@@ -269,6 +285,7 @@ export async function getConductores(onBackgroundUpdate) {
  */
 export function preloadDriverImages(drivers) {
   if (!drivers || !Array.isArray(drivers) || typeof window === "undefined") return;
+  if (!shouldPreloadDriverImages()) return;
   
   const preload = (url) => {
     if (!url) return;
@@ -297,6 +314,39 @@ function generateDriverBadges(d) {
   if (role.includes("admin") || role.includes("owner")) b.push("Staff");
   if (d.stats?.jobs > 50) b.push("Pro");
   if (d.truckyId) b.push("Verificado");
-  
+
   return b;
+}
+
+function normalizeDriverIdPart(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function createStableDriverId(driver, index) {
+  const explicitId = driver.truckyId || driver.steam_id || driver.steamId;
+  if (explicitId) return String(explicitId);
+
+  const normalizedName = normalizeDriverIdPart(driver.name);
+  const normalizedRole = normalizeDriverIdPart(driver.role);
+  const fallbackId = [normalizedName, normalizedRole, `row-${index}`]
+    .filter(Boolean)
+    .join("-");
+
+  return fallbackId || `psv-${index}`;
+}
+
+function shouldPreloadDriverImages() {
+  const connection =
+    navigator.connection ||
+    navigator.mozConnection ||
+    navigator.webkitConnection;
+
+  if (!connection) return true;
+  if (connection.saveData) return false;
+
+  return !["slow-2g", "2g"].includes(connection.effectiveType);
 }

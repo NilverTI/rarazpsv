@@ -2,8 +2,10 @@
  * DOM Utilities & Shared Helpers
  */
 
-export const $ = (selector) => document.querySelector(selector);
-export const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+let toastTimeoutId = null;
+
+export const $ = (selector, root = document) => root.querySelector(selector);
+export const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
 export function escapeHtml(unsafe) {
   if (!unsafe) return "";
@@ -34,7 +36,11 @@ export function showToast(message) {
   toast.textContent = message;
   toast.classList.add("is-visible");
 
-  setTimeout(() => {
+  if (toastTimeoutId) {
+    clearTimeout(toastTimeoutId);
+  }
+
+  toastTimeoutId = setTimeout(() => {
     toast.classList.remove("is-visible");
   }, 4000);
 }

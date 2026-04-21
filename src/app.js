@@ -3,6 +3,7 @@ import { renderHeader } from "./components/Header/Header.js";
 import { renderFooter } from "./components/Footer/Footer.js";
 import { renderMainSections } from "./components/sections-index.js";
 import { renderConversionPage } from "./components/Conversion/ConversionPage.js";
+import { renderStaffCards } from "./components/staff/Staff.js";
 import { initRevealAnimations } from "./core/animations.js";
 import { initMenu } from "./core/menu.js";
 import { initForms } from "./core/forms.js";
@@ -10,87 +11,167 @@ import { initRouter } from "./core/router.js";
 import { $ } from "./utils/dom.js";
 import { initAuth, getSession } from "./utils/auth.js";
 import { initAuthUI } from "./core/auth-ui.js";
-import { getConductores, revalidateConductores, getDriversMetadata } from "./utils/drivers-store.js";
+import { getConductores, getDriversMetadata } from "./utils/drivers-store.js";
 import { getCachedCompanySnapshot } from "./utils/trucky.js";
 
+const COMPANY_ID = "41299";
 const TRUCKY_SYNC_INTERVAL_MS = 10 * 60 * 1000;
-let lastAppliedSnapshotSignature = null;
+
 let truckySyncIntervalId = null;
+let hasRenderedShell = false;
+let hasRenderedPage = false;
+let renderedDriversSignature = null;
+let renderedHeroStatsSignature = null;
 
-/**
- * Main Application Orchestrator
- */
-function renderApp() {
+function getHeroStatsState() {
+  return siteContent.hero.stats.reduce((accumulator, stat) => {
+    if (stat?.key) {
+      accumulator[stat.key] = stat.value;
+    }
+
+    return accumulator;
+  }, {});
+}
+
+function createHeroStatsSignature(stats) {
+  return ["kmRecorridos", "conductoresActivos", "serviciosRealizados"]
+    .map((key) => String(stats?.[key] ?? ""))
+    .join("|");
+}
+
+function createDriversSignature(drivers) {
+  if (!Array.isArray(drivers) || drivers.length === 0) return "empty";
+
+  return drivers
+    .map((driver) => {
+      const identity = driver.id || driver.truckyId || driver.nombre || driver.name || "driver";
+      const jobs = driver.metrics?.servicios || driver.stats?.jobs || 0;
+      const total = driver.metrics?.distanciaTotal || driver.stats?.total || "0";
+      return `${identity}:${jobs}:${total}`;
+    })
+    .join("|");
+}
+
+function setHeroStatsState(stats) {
+  if (!stats) return;
+
+  siteContent.hero.stats = siteContent.hero.stats.map((stat) => {
+    if (!stat?.key || stats[stat.key] == null) return stat;
+    return { ...stat, value: String(stats[stat.key]) };
+  });
+}
+
+function renderShell() {
+  if (hasRenderedShell) return;
+
   const header = $("#site-header");
-  const main = $("#main-content");
   const footer = $("#site-footer");
-  const pageType = document.body.dataset.page;
+  if (!header || !footer) return;
 
-  if (!header || !main || !footer) return;
-
-  // Global Components
   header.innerHTML = renderHeader(siteContent);
   footer.innerHTML = renderFooter(siteContent);
+  hasRenderedShell = true;
+}
 
-  // Page-specific Content
+function renderCurrentPage() {
+  if (hasRenderedPage) return;
+
+  const main = $("#main-content");
+  const pageType = document.body.dataset.page;
+  if (!main) return;
+
   if (pageType === "index") {
     main.innerHTML = renderMainSections(siteContent);
-    initRouter(); // Only needed for scroll-spy navigation on index
+    renderedDriversSignature = createDriversSignature(siteContent.drivers);
+    renderedHeroStatsSignature = createHeroStatsSignature(getHeroStatsState());
   } else if (pageType === "conversion" || pageType === "booking") {
     main.innerHTML = renderConversionPage(siteContent);
     window.scrollTo(0, 0);
   }
+
+  hasRenderedPage = true;
 }
 
-/**
- * Optimized Statistics Update
- */
-function applyHeroStats(stats) {
-  if (!stats) return;
-  
-  try {
-    siteContent.hero.stats = siteContent.hero.stats.map(s => {
-      const label = (s.label || "").toLowerCase();
-      if (label.includes("km recorridos")) return { ...s, value: stats.kmRecorridos };
-      if (label.includes("conductores")) return { ...s, value: stats.conductoresActivos };
-      if (label.includes("servicios")) return { ...s, value: stats.serviciosRealizados };
-      return s;
-    });
+function patchHeroStats(stats) {
+  if (!stats || document.body.dataset.page !== "index") return;
 
-    if (document.body.dataset.page === "index") {
-      const main = $("#main-content");
-      if (main) {
-        main.innerHTML = renderMainSections(siteContent);
-        initRevealAnimations();
-        initRouter();
-      }
+  setHeroStatsState(stats);
+
+  const nextSignature = createHeroStatsSignature(getHeroStatsState());
+  if (nextSignature === renderedHeroStatsSignature) return;
+
+  Object.entries(stats).forEach(([key, value]) => {
+    if (value == null) return;
+
+    const statValueNode = document.querySelector(`[data-hero-stat-value="${key}"]`);
+    if (statValueNode) {
+      statValueNode.textContent = String(value);
     }
-  } catch (e) {
-    console.error("Layout: Stats update failed.", e.message);
+  });
+
+  renderedHeroStatsSignature = nextSignature;
+}
+
+function patchDriversGrid(drivers) {
+  if (!Array.isArray(drivers) || drivers.length === 0) return;
+
+  siteContent.drivers = drivers;
+
+  if (document.body.dataset.page !== "index") return;
+
+  const nextSignature = createDriversSignature(drivers);
+  if (nextSignature === renderedDriversSignature) return;
+
+  const staffGrid = document.querySelector("[data-staff-grid]");
+  if (!staffGrid) return;
+
+  staffGrid.innerHTML = renderStaffCards(drivers);
+  initRevealAnimations(staffGrid);
+  renderedDriversSignature = nextSignature;
+}
+
+function hydrateAppStateFromCache() {
+  try {
+    const cachedSnapshot = getCachedCompanySnapshot(COMPANY_ID);
+    if (cachedSnapshot?.snapshot?.heroStats) {
+      setHeroStatsState(cachedSnapshot.snapshot.heroStats);
+    }
+
+    if (cachedSnapshot?.snapshot?.drivers?.length) {
+      siteContent.drivers = cachedSnapshot.snapshot.drivers;
+    }
+
+    const metadata = getDriversMetadata();
+    if (metadata?.heroStats) {
+      setHeroStatsState(metadata.heroStats);
+    }
+  } catch (error) {
+    console.warn("Bootstrap: cache hydration skipped.", error.message);
   }
 }
 
 async function integrateDrivers() {
   try {
-    // SWR Pattern: getConductores returns cache instantly and revalidates in background
     const drivers = await getConductores((updatedDrivers) => {
       if (!updatedDrivers || updatedDrivers.length === 0) return;
-      
-      siteContent.drivers = updatedDrivers;
-      renderApp();
-      initRevealAnimations();
+
+      patchDriversGrid(updatedDrivers);
+
+      const latestMetadata = getDriversMetadata();
+      if (latestMetadata?.heroStats) {
+        patchHeroStats(latestMetadata.heroStats);
+      }
+
       console.log("Drivers Sync Engine: UI updated with fresh background data.");
     });
 
-    if (drivers && drivers.length > 0) {
-      siteContent.drivers = drivers;
-      renderApp();
+    if (drivers?.length) {
+      patchDriversGrid(drivers);
     }
 
-    // Update Hero Stats (Safe sync fallback)
-    const meta = getDriversMetadata();
-    if (meta?.heroStats) {
-      applyHeroStats(meta.heroStats);
+    const metadata = getDriversMetadata();
+    if (metadata?.heroStats) {
+      patchHeroStats(metadata.heroStats);
     }
   } catch (error) {
     console.warn("Drivers Sync Engine: Graceful degradation in effect.", error.message);
@@ -121,39 +202,29 @@ function initSyncCycles() {
 function bootstrap() {
   document.documentElement.classList.remove("no-js");
 
-  // Phase 1: Sudden Deep Hydration (Sync Metadata)
-  try {
-    const meta = getDriversMetadata();
-    if (meta?.heroStats) {
-      applyHeroStats(meta.heroStats);
-      console.log("Bootstrap: Hero stats hydrated instantly.");
-    }
-  } catch (e) {
-    console.warn("Bootstrap: Sync hydration skipped.");
-  }
-
-  // Initial Sync Start (Will fire background revalidation)
-  integrateDrivers();
-
-  // Phase 2: Initial Render (Will use cached data if available)
-  renderApp();
+  hydrateAppStateFromCache();
+  renderShell();
+  renderCurrentPage();
   initRevealAnimations();
   initMenu();
   initForms();
 
   if (document.body.dataset.page === "index") {
+    initRouter();
     initSyncCycles();
   }
 
-  // Auth Initialization
-  initAuth();
-  initAuthUI();
-  getSession().then(session => {
-    if (session) {
+  const authButton = document.querySelector("#auth-member-btn");
+  if (authButton) {
+    initAuth();
+    initAuthUI();
+    getSession().then((session) => {
+      if (!session) return;
+
       console.log("Authenticated as:", session.user.email);
       document.documentElement.classList.add("is-authenticated");
-    }
-  });
+    });
+  }
 }
 
 if (typeof window !== "undefined") {

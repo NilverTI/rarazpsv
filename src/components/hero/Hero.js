@@ -1,5 +1,7 @@
 import { escapeHtml } from "../../utils/dom.js";
 
+const HERO_IMAGE_PATH = "assets/images/bus1.jpg";
+
 /**
  * Hero Section Renderer
  */
@@ -7,20 +9,31 @@ export function renderHero({ hero }) {
   return `
     <section class="section section--hero" id="inicio">
       <div class="hero-stage">
-        <img class="hero-bg" src="assets/images/bus1.png" alt="Bus Turismo Raraz en ruta">
+        <img
+          class="hero-bg"
+          src="${HERO_IMAGE_PATH}"
+          alt="Bus Turismo Raraz en ruta"
+          width="1280"
+          height="853"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+        >
         <div class="hero-overlay" aria-hidden="true"></div>
 
         <div class="site-width hero-container-split">
           <div class="hero-metrics-bar" data-reveal>
             ${hero.stats
-              .map(
-                (stat) => `
+      .map((stat) => {
+        const statKey = escapeHtml(stat.key || stat.label);
+
+        return `
                 <div class="glass-metric">
-                  <span class="metric-value">${escapeHtml(stat.value)}</span>
+                  <span class="metric-value" data-hero-stat-value="${statKey}">${escapeHtml(stat.value)}</span>
                   <span class="metric-label">${escapeHtml(stat.label)}</span>
-                </div>`
-              )
-              .join("")}
+                </div>`;
+      })
+      .join("")}
           </div>
 
           <div class="hero-content hero-content--professional" data-reveal>
@@ -48,4 +61,3 @@ export function renderHero({ hero }) {
       </div>
     </section>`;
 }
-
