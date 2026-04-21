@@ -209,8 +209,8 @@ export const siteContent = {
   ],
   contact: {
     cards: [
-      { label: "WhatsApp", value: "+51 999 555 210", detail: "Atencion inmediata." },
-      { label: "Email", value: "reservas@rarazturismo.pe", detail: "Cotizaciones corporativas." },
+      { label: "WhatsApp", value: "+51 933 915 043", detail: "Atencion inmediata." },
+      { label: "Email", value: "En Proceso", detail: "Cotizaciones corporativas." },
       { label: "Base", value: "Caraz, Peru", detail: "Centro operativo." },
     ],
   },
