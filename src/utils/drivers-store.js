@@ -201,9 +201,11 @@ function enrichDriverCollection(rawDrivers) {
   }));
 }
 
-export async function revalidateConductores(onUpdate) {
+export async function revalidateConductores(onUpdate, options = {}) {
   if (inFlightSync) return inFlightSync;
-  
+
+  const { forcePersist = false } = options;
+
   inFlightSync = (async () => {
     try {
       const vtcId = "41299";
@@ -227,8 +229,10 @@ export async function revalidateConductores(onUpdate) {
         });
       }
 
+      const hasDrivers = Array.isArray(result.snapshot?.drivers) && result.snapshot.drivers.length > 0;
+
       // Phase 2 (Detailed): Full history and calculated stats ready
-      if (result.updated && result.snapshot?.drivers) {
+      if (hasDrivers && (result.updated || forcePersist)) {
         const fullEnriched = enrichDriverCollection(result.snapshot.drivers);
         
         await saveConductoresToCache(fullEnriched);
@@ -240,7 +244,7 @@ export async function revalidateConductores(onUpdate) {
         console.log("Drivers Store: Phase 2 (Full) update emitted.");
         return fullEnriched;
       }
-      
+
       return null;
     } catch (e) {
       console.warn("Drivers Store: Graceful degradation in effect.", e.message);
@@ -276,7 +280,7 @@ export async function getConductores(onBackgroundUpdate) {
   }
   
   // 3. No Cache (Cold Load)
-  const freshData = await revalidateConductores();
+  const freshData = await revalidateConductores(onBackgroundUpdate, { forcePersist: true });
   return freshData || [];
 }
 

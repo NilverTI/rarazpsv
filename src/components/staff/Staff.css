@@ -124,23 +124,6 @@
   box-shadow: 0 2px 8px rgba(50, 66, 95, 0.25);
 }
 
-.staff-badges-container {
-  display: flex;
-  gap: 0.25rem;
-  margin-top: 0.3rem;
-}
-
-.staff-badge-mini {
-  font-size: 0.5rem;
-  padding: 0.1rem 0.3rem;
-  background: rgba(7, 17, 37, 0.1);
-  color: #071125;
-  border-radius: 4px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
 /* Back Face */
 .staff-card-back {
   background: linear-gradient(135deg, #071125 0%, #0d2142 100%);

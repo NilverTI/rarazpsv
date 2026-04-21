@@ -16,9 +16,6 @@ function renderSingleStaffCard(driver) {
     servicios: parseInt(rawMetrics.servicios || rawMetrics.jobs || 0, 10) || 0,
   };
 
-  const badges = Array.isArray(driver.badges)
-    ? driver.badges
-    : (rol === "Administrador" ? ["Staff"] : []);
   const bio = String(
     driver.reverso?.bio || driver.bio || "Staff certificado para operaciones logisticos VIP."
   );
@@ -41,9 +38,6 @@ function renderSingleStaffCard(driver) {
           </div>
           <div class="staff-info-front">
             <h3 class="staff-name-modern">${escapeHtml(nombre)}</h3>
-            <div class="staff-badges-container">
-              ${badges.map((badge) => `<span class="staff-badge-mini">${escapeHtml(badge)}</span>`).join("")}
-            </div>
           </div>
           <div class="staff-role-badge staff-role-badge--${escapeHtml(roleTone)}">${escapeHtml(rol)}</div>
         </div>

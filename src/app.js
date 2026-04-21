@@ -16,12 +16,17 @@ import { getCachedCompanySnapshot } from "./utils/trucky.js";
 
 const COMPANY_ID = "41299";
 const TRUCKY_SYNC_INTERVAL_MS = 10 * 60 * 1000;
+const TRUCKY_EVENT_SYNC_DEBOUNCE_MS = 1200;
+const TRUCKY_EVENT_SYNC_COOLDOWN_MS = 45 * 1000;
 
 let truckySyncIntervalId = null;
 let hasRenderedShell = false;
 let hasRenderedPage = false;
 let renderedDriversSignature = null;
 let renderedHeroStatsSignature = null;
+let integrateDriversPromise = null;
+let syncDebounceId = null;
+let lastDriversSyncAt = 0;
 
 function getHeroStatsState() {
   return siteContent.hero.stats.reduce((accumulator, stat) => {
@@ -151,52 +156,92 @@ function hydrateAppStateFromCache() {
 }
 
 async function integrateDrivers() {
-  try {
-    const drivers = await getConductores((updatedDrivers) => {
-      if (!updatedDrivers || updatedDrivers.length === 0) return;
+  if (integrateDriversPromise) return integrateDriversPromise;
 
-      patchDriversGrid(updatedDrivers);
+  integrateDriversPromise = (async () => {
+    try {
+      const drivers = await getConductores((updatedDrivers) => {
+        if (!updatedDrivers || updatedDrivers.length === 0) return;
 
-      const latestMetadata = getDriversMetadata();
-      if (latestMetadata?.heroStats) {
-        patchHeroStats(latestMetadata.heroStats);
+        patchDriversGrid(updatedDrivers);
+
+        const latestMetadata = getDriversMetadata();
+        if (latestMetadata?.heroStats) {
+          patchHeroStats(latestMetadata.heroStats);
+        }
+
+        console.log("Drivers Sync Engine: UI updated with fresh background data.");
+      });
+
+      if (drivers?.length) {
+        patchDriversGrid(drivers);
       }
 
-      console.log("Drivers Sync Engine: UI updated with fresh background data.");
-    });
-
-    if (drivers?.length) {
-      patchDriversGrid(drivers);
+      const metadata = getDriversMetadata();
+      if (metadata?.heroStats) {
+        patchHeroStats(metadata.heroStats);
+      }
+    } catch (error) {
+      console.warn("Drivers Sync Engine: Graceful degradation in effect.", error.message);
+    } finally {
+      integrateDriversPromise = null;
     }
+  })();
 
-    const metadata = getDriversMetadata();
-    if (metadata?.heroStats) {
-      patchHeroStats(metadata.heroStats);
-    }
-  } catch (error) {
-    console.warn("Drivers Sync Engine: Graceful degradation in effect.", error.message);
-  }
+  return integrateDriversPromise;
 }
 
 function initSyncCycles() {
-  const sync = () => {
+  const runSync = () => {
     if (document.body.dataset.page !== "index") return;
     if (document.visibilityState === "hidden") return;
+    lastDriversSyncAt = Date.now();
     integrateDrivers();
   };
 
-  sync();
+  const scheduleSync = ({ immediate = false, force = false } = {}) => {
+    const invoke = () => {
+      syncDebounceId = null;
+
+      if (!force && Date.now() - lastDriversSyncAt < TRUCKY_EVENT_SYNC_COOLDOWN_MS) {
+        return;
+      }
+
+      runSync();
+    };
+
+    if (immediate) {
+      if (syncDebounceId) {
+        clearTimeout(syncDebounceId);
+        syncDebounceId = null;
+      }
+      invoke();
+      return;
+    }
+
+    if (syncDebounceId) {
+      clearTimeout(syncDebounceId);
+    }
+
+    syncDebounceId = window.setTimeout(invoke, TRUCKY_EVENT_SYNC_DEBOUNCE_MS);
+  };
+
+  scheduleSync({ immediate: true, force: true });
 
   if (!truckySyncIntervalId) {
-    truckySyncIntervalId = window.setInterval(sync, TRUCKY_SYNC_INTERVAL_MS);
+    truckySyncIntervalId = window.setInterval(() => {
+      scheduleSync({ immediate: true });
+    }, TRUCKY_SYNC_INTERVAL_MS);
   }
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") sync();
+    if (document.visibilityState === "visible") {
+      scheduleSync();
+    }
   });
 
-  window.addEventListener("focus", sync);
-  window.addEventListener("online", sync);
+  window.addEventListener("focus", () => scheduleSync());
+  window.addEventListener("online", () => scheduleSync({ immediate: true }));
 }
 
 function bootstrap() {

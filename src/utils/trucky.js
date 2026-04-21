@@ -9,9 +9,22 @@ const TRUCKY_HEADERS = {
 };
 const SCHEMA_VERSION = "drivers-v3";
 const TRUCKY_CACHE_TTL_MS = 10 * 60 * 1000;
+const TRUCKY_CACHE_STALE_MS = 60 * 60 * 1000;
+const TRUCKY_CACHE_GRACE_MS = 2 * 60 * 1000;
 const TRUCKY_CACHE_KEY_PREFIX = "raraz.trucky.companySnapshot";
 const REQUEST_TIMEOUT_MS = 8000;
+const REQUEST_MAX_ATTEMPTS = 3;
+const REQUEST_BASE_BACKOFF_MS = 450;
+const REQUEST_MAX_BACKOFF_MS = 4000;
+const REQUEST_MIN_GAP_MS = 250;
+const REQUEST_CONCURRENCY = 2;
 const SNAPSHOT_REQUESTS = new Map();
+const URL_REQUESTS = new Map();
+const REQUEST_QUEUE = [];
+
+let activeRequestCount = 0;
+let requestQueueTimerId = null;
+let lastRequestStartedAt = 0;
 
 function formatRoleLabel(roleName) {
   if (!roleName) return "Conductor";
@@ -98,32 +111,164 @@ function getCompanyCacheKey(companyId) {
   return `${TRUCKY_CACHE_KEY_PREFIX}:${SCHEMA_VERSION}:${companyId}`;
 }
 
-async function fetchJson(url, errorLabel) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function parseRetryAfterMs(rawValue) {
+  if (!rawValue) return null;
+
+  const seconds = Number.parseInt(rawValue, 10);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return seconds * 1000;
+  }
+
+  const retryDate = new Date(rawValue);
+  const retryAfterMs = retryDate.getTime() - Date.now();
+  return Number.isFinite(retryAfterMs) && retryAfterMs > 0 ? retryAfterMs : null;
+}
+
+function isRetryableStatus(status) {
+  return status === 408 || status === 429 || status >= 500;
+}
+
+function isRetryableError(error) {
+  if (!error) return false;
+  if (typeof error.retryable === "boolean") return error.retryable;
+  return error.name === "AbortError" || error.name === "TypeError";
+}
+
+function getRetryDelayMs(error, attempt) {
+  if (Number.isFinite(error?.retryAfterMs) && error.retryAfterMs > 0) {
+    return Math.min(error.retryAfterMs, REQUEST_MAX_BACKOFF_MS * 2);
+  }
+
+  const exponentialDelay = Math.min(
+    REQUEST_BASE_BACKOFF_MS * Math.pow(2, Math.max(0, attempt - 1)),
+    REQUEST_MAX_BACKOFF_MS
+  );
+
+  const jitter = 0.85 + Math.random() * 0.3;
+  return Math.round(exponentialDelay * jitter);
+}
+
+function processRequestQueue() {
+  if (activeRequestCount >= REQUEST_CONCURRENCY || REQUEST_QUEUE.length === 0) {
+    return;
+  }
+
+  const elapsed = Date.now() - lastRequestStartedAt;
+  const waitTime = Math.max(0, REQUEST_MIN_GAP_MS - elapsed);
+
+  if (waitTime > 0) {
+    if (!requestQueueTimerId) {
+      requestQueueTimerId = setTimeout(() => {
+        requestQueueTimerId = null;
+        processRequestQueue();
+      }, waitTime);
+    }
+    return;
+  }
+
+  const nextRequest = REQUEST_QUEUE.shift();
+  if (!nextRequest) return;
+
+  activeRequestCount += 1;
+  lastRequestStartedAt = Date.now();
+
+  Promise.resolve()
+    .then(nextRequest.task)
+    .then(nextRequest.resolve)
+    .catch(nextRequest.reject)
+    .finally(() => {
+      activeRequestCount = Math.max(0, activeRequestCount - 1);
+      processRequestQueue();
+    });
+
+  processRequestQueue();
+}
+
+function scheduleRequest(task) {
+  return new Promise((resolve, reject) => {
+    REQUEST_QUEUE.push({ task, resolve, reject });
+    processRequestQueue();
+  });
+}
+
+async function executeJsonRequest(url, errorLabel) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(url, { 
+    const response = await fetch(url, {
       headers: TRUCKY_HEADERS,
-      mode: 'cors',
-      credentials: 'omit',
-      referrerPolicy: 'no-referrer',
+      mode: "cors",
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
       signal: controller.signal,
     });
-    
+
     if (!response.ok) {
-      throw new Error(`${errorLabel} (${response.status})`);
+      const requestError = new Error(`${errorLabel} (${response.status})`);
+      requestError.status = response.status;
+      requestError.retryable = isRetryableStatus(response.status);
+      requestError.retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
+      throw requestError;
     }
-    
+
     return await response.json();
   } catch (e) {
     // Specifically handle fetch failures which are common in Brave (Shields)
-    const errorType = e.name === 'TypeError' ? 'BLOCKING_OR_NETWORK' : 'API_ERROR';
+    if (typeof e.retryable !== "boolean") {
+      e.retryable = e.name === "AbortError" || e.name === "TypeError";
+    }
+
+    const errorType =
+      e.status === 429
+        ? "RATE_LIMIT"
+        : e.name === "TypeError"
+          ? "BLOCKING_OR_NETWORK"
+          : "API_ERROR";
+
     console.warn(`Trucky API (${errorType}): ${errorLabel}.`, e.message);
     throw e;
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function fetchJson(url, errorLabel) {
+  const inFlightRequest = URL_REQUESTS.get(url);
+  if (inFlightRequest) return inFlightRequest;
+
+  const request = (async () => {
+    let lastError = null;
+
+    for (let attempt = 1; attempt <= REQUEST_MAX_ATTEMPTS; attempt += 1) {
+      try {
+        return await scheduleRequest(() => executeJsonRequest(url, errorLabel));
+      } catch (error) {
+        lastError = error;
+
+        if (!isRetryableError(error) || attempt >= REQUEST_MAX_ATTEMPTS) {
+          throw error;
+        }
+
+        const retryDelayMs = getRetryDelayMs(error, attempt);
+        console.warn(
+          `Trucky API: retry ${attempt}/${REQUEST_MAX_ATTEMPTS - 1} for ${errorLabel} in ${retryDelayMs}ms.`
+        );
+        await sleep(retryDelayMs);
+      }
+    }
+
+    throw lastError;
+  })().finally(() => {
+    URL_REQUESTS.delete(url);
+  });
+
+  URL_REQUESTS.set(url, request);
+  return request;
 }
 
 async function fetchCompany(companyId) {
@@ -343,28 +488,32 @@ export async function getLiveCompanySnapshot(companyId) {
 }
 
 export function getCachedCompanySnapshot(companyId) {
-  const entry = cache.get(getCompanyCacheKey(companyId));
+  const entry = cache.getEntry(getCompanyCacheKey(companyId), { allowStale: true });
   if (!entry) return null;
 
   return {
-    snapshot: entry.snapshot,
-    signature: entry.signature,
-    isFresh: true,
-    lastChangedAt: entry.lastChangedAt || entry.fetchedAt,
+    snapshot: entry.value.snapshot,
+    signature: entry.value.signature,
+    isFresh: !entry.isStale,
+    lastChangedAt: entry.value.lastChangedAt || entry.value.fetchedAt,
   };
 }
 
-const TRUCKY_CACHE_GRACE_MS = 2 * 60 * 1000; // 2 minutes
-
 export async function syncCompanySnapshot(companyId, onPartial = null) {
   const cacheKey = getCompanyCacheKey(companyId);
-  const cacheEntry = cache.get(cacheKey);
+  const cachedEnvelope = cache.getEntry(cacheKey, { allowStale: true });
+  const cacheEntry = cachedEnvelope?.value || null;
 
   // 1. Grace Period Check
   if (cacheEntry) {
     const age = Date.now() - (cacheEntry.fetchedAt || 0);
-    if (age < TRUCKY_CACHE_GRACE_MS) {
-      return { snapshot: cacheEntry.snapshot, source: "cache", updated: false, signature: cacheEntry.signature };
+    if (!cachedEnvelope?.isStale && age < TRUCKY_CACHE_GRACE_MS) {
+      return {
+        snapshot: cacheEntry.snapshot,
+        source: "cache",
+        updated: false,
+        signature: cacheEntry.signature,
+      };
     }
   }
 
@@ -412,7 +561,10 @@ export async function syncCompanySnapshot(companyId, onPartial = null) {
         lastChangedAt: cacheEntry && cacheEntry.signature === livePayload.signature ? cacheEntry.lastChangedAt : now,
       };
 
-      cache.set(cacheKey, nextEntry, TRUCKY_CACHE_TTL_MS);
+      cache.set(cacheKey, nextEntry, {
+        ttl: TRUCKY_CACHE_TTL_MS,
+        staleTtl: TRUCKY_CACHE_STALE_MS,
+      });
 
       return {
         snapshot: livePayload.snapshot,
@@ -422,7 +574,15 @@ export async function syncCompanySnapshot(companyId, onPartial = null) {
       };
     } catch (error) {
       console.error("Trucky API Error (Tiered Sync):", error);
-      return cacheEntry ? { snapshot: cacheEntry.snapshot, source: "cache", updated: false, signature: cacheEntry.signature, error } : null;
+      return cacheEntry
+        ? {
+            snapshot: cacheEntry.snapshot,
+            source: cachedEnvelope?.isStale ? "stale-cache" : "cache",
+            updated: false,
+            signature: cacheEntry.signature,
+            error,
+          }
+        : null;
     } finally {
       SNAPSHOT_REQUESTS.delete(requestKey);
     }
@@ -453,6 +613,9 @@ function touchCompanySnapshotCacheEntry(companyId, entry) {
     ...entry,
     fetchedAt: Date.now(),
   };
-  cache.set(getCompanyCacheKey(companyId), touchedEntry, TRUCKY_CACHE_TTL_MS);
+  cache.set(getCompanyCacheKey(companyId), touchedEntry, {
+    ttl: TRUCKY_CACHE_TTL_MS,
+    staleTtl: TRUCKY_CACHE_STALE_MS,
+  });
   return touchedEntry;
 }
