@@ -1,0 +1,10 @@
+{
+  "name": "raraz-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Turismo Raraz static site ready for Vercel deployment",
+  "scripts": {
+    "dev": "npx serve . -l 3000",
+    "preview": "npx serve . -l 3000"
+  }
+}

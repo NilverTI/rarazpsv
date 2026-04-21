@@ -9,9 +9,9 @@ export function renderDestinations({ destinations }) {
     <section class="section section--soft" id="destinos">
       <div class="site-width">
         ${renderSectionHeading(
-          "Destinos Regionales",
           "Conectando Experiencias",
-          "Logistica precisa para los destinos mas emblematicos de Ancash y el norte del pais."
+          "Destinos Principales",
+          "Rutas clave y logistica de vanguardia conectando los puntos mas importantes del pais."
         )}
 
         <div class="destination-grid destination-grid--compact">

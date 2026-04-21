@@ -35,21 +35,21 @@ export function renderFooter({ company, nav, contact }) {
           <div class="footer-col">
             <h4 class="footer-label-modern">Sede Central</h4>
             <div class="footer-contact-item">
-              <span class="footer-contact-label">Base Operativa</span>
+              <span class="footer-contact-label">Operación</span>
               <span class="footer-contact-value">${escapeHtml(contact.cards[2].value)}</span>
               <span class="footer-contact-detail">${escapeHtml(contact.cards[2].detail)}</span>
             </div>
             <div class="footer-contact-item">
-              <span class="footer-contact-label">Pais</span>
+              <span class="footer-contact-label">Ubicación</span>
               <span class="footer-contact-value">Peru</span>
             </div>
           </div>
 
-          <div class="footer-col contact-col">
+          <div class="footer-col">
             <h4 class="footer-label-modern">Reservas</h4>
             <div class="footer-contact-item">
               <span class="footer-contact-label">WhatsApp Corporativo</span>
-              <a href="https://wa.me/51999555210" class="footer-contact-link-premium">
+              <a href="https://wa.me/51999555210" target="_blank" rel="noopener noreferrer" class="footer-contact-link-premium">
                 ${escapeHtml(contact.cards[0].value)}
               </a>
             </div>
@@ -68,14 +68,8 @@ export function renderFooter({ company, nav, contact }) {
       <div class="site-width">
         <div class="footer-bottom-inner">
           <p class="copyright-modern">
-            &copy; 2026 <strong>Turismo Raraz [PSV]</strong>.
-            <span>Diseno refinado, operacion clara y experiencia lista para produccion.</span>
+            &copy; 2026 <strong>Turismo Raraz [PSV] - Desarrollado por <a href="https://github.com/NilverTI" target="_blank" rel="noopener noreferrer" class="developer-link">NILVER T.I</a></strong>.
           </p>
-          <div class="footer-social-placeholders">
-            <span class="social-placeholder-icon">FB</span>
-            <span class="social-placeholder-icon">IG</span>
-            <span class="social-placeholder-icon">WA</span>
-          </div>
         </div>
       </div>
     </div>`;

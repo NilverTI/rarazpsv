@@ -1,186 +1,129 @@
 /* Premium Dashboard Overhaul: About Section */
 .section--premium-about {
-  padding: 6rem 0;
+  padding: 8rem 0;
   background-color: var(--color-surface);
+  position: relative;
+  overflow: hidden;
 }
 
-/* 1. Header Dashboard: Narrative + Indicators */
-.about-header-dashboard {
+/* 1. Dashboard Layout: Narrative + Pillars */
+.about-dashboard-grid {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 4rem;
-  align-items: flex-start;
-  margin-bottom: 5rem;
+  grid-template-columns: 1fr 420px;
+  gap: 5rem;
+  align-items: center;
+  margin-bottom: 6rem;
 }
 
 .about-narrative-main {
-  max-width: 720px;
+  max-width: 680px;
 }
 
 .about-desc-premium {
   font-size: 1.15rem;
   line-height: 1.7;
   color: var(--color-ink-soft);
-  margin-top: 1.5rem;
-  max-width: 640px;
+  margin-top: 1.8rem;
+  max-width: 600px;
 }
 
-.about-indicators-grid {
+/* 2. Operational Pillars Dashboard: Compact & Professional */
+.about-pillars-dashboard {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.15rem;
+  gap: 1.25rem;
 }
 
-.indicator-card {
+.pillar-mini-card {
   background: white;
-  padding: 1.35rem 1.75rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(7, 20, 46, 0.04);
-  border: 1px solid rgba(7, 20, 46, 0.05);
+  padding: 1.5rem 1.75rem;
+  border-radius: 24px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.indicator-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 15px 40px rgba(0, 94, 244, 0.08);
-  border-color: rgba(0, 94, 244, 0.1);
-}
-
-.indicator-value {
-  font-family: "Sora", sans-serif;
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--color-primary-strong);
-  line-height: 1;
-}
-
-.indicator-label {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--color-ink-soft);
-  text-align: right;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  max-width: 140px;
-}
-
-/* 2. Operational Pillars Row: Dark Premium Cards */
-.about-pillars-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
-  margin-bottom: 5rem;
+  align-items: flex-start;
+  border: 1px solid rgba(7, 20, 46, 0.05);
+  box-shadow: 0 4px 20px rgba(7, 20, 46, 0.02);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.pillar-card {
-  background: linear-gradient(135deg, #071125 0%, #0e2040 100%);
-  padding: 2.75rem 2.25rem;
-  border-radius: 34px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  transition: all 0.4s ease;
-  z-index: 1;
+.pillar-mini-card:hover {
+  transform: translateX(-8px);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 20px 40px rgba(0, 94, 244, 0.08);
 }
 
-.pillar-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(49, 182, 255, 0.1), transparent 60%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  z-index: -1;
-}
-
-.pillar-card:hover {
-  transform: translateY(-8px);
-  border-color: rgba(49, 182, 255, 0.25);
-  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
-}
-
-.pillar-card:hover::after {
-  opacity: 1;
-}
-
-.pillar-icon-box {
-  width: 58px;
-  height: 58px;
-  background: rgba(49, 182, 255, 0.12);
-  color: #31b6ff;
+.pillar-mini-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: var(--color-grey-light);
+  color: var(--color-primary);
   display: grid;
   place-items: center;
-  border-radius: 18px;
-  margin-bottom: 1.75rem;
-  transition: transform 0.4s ease;
+  border-radius: 14px;
+  transition: all 0.4s ease;
 }
 
-.pillar-card:hover .pillar-icon-box {
-  transform: scale(1.1) rotate(5deg);
-  background: rgba(49, 182, 255, 0.2);
-}
-
-.pillar-icon-box svg {
-  width: 30px;
-  height: 30px;
-}
-
-.pillar-content h3 {
-  font-size: 1.35rem;
-  font-weight: 800;
-  margin-bottom: 0.85rem;
-  letter-spacing: -0.02em;
+.pillar-mini-card:hover .pillar-mini-icon {
+  background: var(--color-primary);
   color: white;
+  transform: rotate(-5deg) scale(1.1);
 }
 
-.pillar-content p {
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.7);
+.pillar-mini-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.pillar-mini-info h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+
+.pillar-mini-info p {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
   margin: 0;
 }
 
 /* 3. Advantages Badge Row: Clean Badge List */
 .about-advantages-row {
   display: flex;
-  justify-content: center;
-  padding-top: 3rem;
-  border-top: 1px solid rgba(7, 20, 46, 0.08);
+  justify-content: flex-start;
+  padding-top: 4rem;
+  border-top: 1px solid rgba(7, 20, 46, 0.05);
 }
 
 .advantages-badge-list {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .adv-badge {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.85rem 1.6rem;
-  background: white;
-  border: 1px solid #e2e8f0;
+  gap: 0.75rem;
+  padding: 0.75rem 1.4rem;
+  background: var(--color-grey-light);
+  border: 1px solid transparent;
   border-radius: 100px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.01);
 }
 
 .adv-badge:hover {
-  background: #f8fafc;
-  border-color: var(--color-primary);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 94, 244, 0.06);
+  background: white;
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 94, 244, 0.05);
 }
 
 .adv-badge-icon {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   color: var(--color-primary);
   display: flex;
   align-items: center;
@@ -193,56 +136,52 @@
 }
 
 .adv-badge-text {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: var(--color-ink);
-  letter-spacing: -0.01em;
 }
 
 /* Dashboard Responsive Layouts */
 @media (max-width: 1100px) {
-  .about-header-dashboard {
+  .about-dashboard-grid {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 4rem;
   }
   
-  .about-indicators-grid {
-    grid-template-columns: repeat(3, 1fr);
+  .about-narrative-main {
+    max-width: 100%;
   }
-  
-  .about-pillars-row {
-    grid-template-columns: 1fr 1fr;
+
+  .pillar-mini-card:hover {
+    transform: translateY(-5px);
   }
 }
 
 @media (max-width: 768px) {
   .section--premium-about {
-    padding: 4rem 0;
+    padding: 5rem 0;
   }
   
-  .about-indicators-grid {
-    grid-template-columns: 1fr;
+  .about-dashboard-grid {
+    margin-bottom: 4rem;
+  }
+
+  .pillar-mini-card {
+    padding: 1.25rem;
+    gap: 1.25rem;
   }
   
-  .about-pillars-row {
-    grid-template-columns: 1fr;
+  .pillar-mini-icon {
+    width: 42px;
+    height: 42px;
   }
-  
-  .pillar-card {
-    padding: 2.25rem 1.75rem;
+
+  .pillar-mini-info h3 {
+    font-size: 1.05rem;
   }
-  
-  .indicator-card {
-    padding: 1.15rem 1.35rem;
-  }
-  
+
   .advantages-badge-list {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-  
-  .adv-badge {
-    justify-content: center;
+    flex-direction: row;
+    justify-content: flex-start;
   }
 }

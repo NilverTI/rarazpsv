@@ -87,7 +87,7 @@
   position: absolute;
   top: 0.75rem;
   right: 0.75rem;
-  background: #ff3b30;
+  background: #32425f;
   color: white;
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
@@ -96,8 +96,49 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   z-index: 6;
-  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+  box-shadow: 0 2px 8px rgba(50, 66, 95, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staff-role-badge--admin {
+  background: #ff0019;
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgba(255, 0, 25, 0.28);
+}
+
+.staff-role-badge--owner {
+  background: #e1ff00;
+  color: #071125;
+  box-shadow: 0 2px 10px rgba(225, 255, 0, 0.3);
+}
+
+.staff-role-badge--conductor {
+  background: #00fa00;
+  color: #071125;
+  box-shadow: 0 2px 10px rgba(0, 250, 0, 0.28);
+}
+
+.staff-role-badge--default {
+  background: #32425f;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(50, 66, 95, 0.25);
+}
+
+.staff-badges-container {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.staff-badge-mini {
+  font-size: 0.5rem;
+  padding: 0.1rem 0.3rem;
+  background: rgba(7, 17, 37, 0.1);
+  color: #071125;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 /* Back Face */
@@ -164,14 +205,49 @@
 .highlight-gold { color: #f9c345; }
 .highlight-cyan { color: #00f2ff; }
 
-.staff-bio-back {
+.staff-footer-back {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 1rem;
+}
+
+.staff-bio-back {
   text-align: left;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   line-height: 1.5;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.trucky-btn-premium {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 8px;
+  color: #00f2ff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trucky-btn-premium:hover {
+  background: #00f2ff;
+  color: #071125;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 242, 255, 0.25);
 }
 
 @media (max-width: 1100px) {

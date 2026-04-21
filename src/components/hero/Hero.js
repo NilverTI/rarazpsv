@@ -25,7 +25,6 @@ export function renderHero({ hero }) {
 
           <div class="hero-content hero-content--professional" data-reveal>
             <div class="hero-header-row">
-              <div class="hero-welcome-badge">${escapeHtml(hero.welcome)}</div>
               <span class="hero-eyebrow-accent">${escapeHtml(hero.eyebrow)}</span>
             </div>
             

@@ -5,8 +5,10 @@ import { renderNavLinks } from "../shared/render-utils.js";
  * Header Component Renderer
  */
 export function renderHeader({ company, nav }) {
-  const isSubPage = typeof document !== "undefined" && document.body.dataset.page !== "index";
+  const pageType = typeof document !== "undefined" ? document.body.dataset.page : "index";
+  const isSubPage = pageType !== "index";
   const root = isSubPage ? "index.html" : "";
+  const contactHref = isSubPage ? "#contacto" : "booking.html#contacto";
 
   return `
     <div class="dock-container">
@@ -22,7 +24,7 @@ export function renderHeader({ company, nav }) {
         </nav>
 
         <div class="dock-actions">
-          <a href="#contacto" class="btn btn--dock-primary">
+          <a href="${contactHref}" class="btn btn--dock-primary">
             Contacto
           </a>
         </div>
@@ -38,10 +40,9 @@ export function renderHeader({ company, nav }) {
         </div>
         <nav class="nav-mobile">
           ${renderNavLinks(nav, "nav-link-mobile", true, root)}
-          <a href="#contacto" class="nav-link-mobile">Contacto</a>
+          <a href="${contactHref}" class="nav-link-mobile">Contacto</a>
         </nav>
       </div>
       <div class="menu-scrim" data-menu-scrim></div>
     </div>`;
 }
-

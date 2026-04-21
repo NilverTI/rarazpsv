@@ -28,7 +28,7 @@ export function renderNavLinks(nav, className = "nav-link", enableTracking = tru
       const iconHtml = icon && ICONS[icon] ? `<span class="nav-icon">${ICONS[icon]}</span>` : "";
       return `
         <a class="${className}" href="${href}"${enableTracking ? ` data-nav-link="${escapeHtml(id)}"` : ""}>
-          ${iconHtml}<span>${escapeHtml(label)}</span>
+          ${iconHtml}<span class="nav-label">${escapeHtml(label)}</span>
         </a>`;
     })
     .join("");
