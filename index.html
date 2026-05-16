@@ -20,6 +20,41 @@
 
 <body data-page="index">
   <a class="skip-link" href="#main-content">Saltar al contenido</a>
+
+  <!-- Disclaimer Modal -->
+  <div id="disclaimer-overlay" class="disclaimer-overlay" role="dialog" aria-modal="true" aria-labelledby="disclaimer-title">
+    <div class="disclaimer-modal">
+      <div class="disclaimer-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h2 id="disclaimer-title" class="disclaimer-title">Aviso importante</h2>
+      <p class="disclaimer-body">
+        Esta <strong>no es la página web oficial</strong> de Turismo Raraz.
+        Si buscas el sitio oficial, visítalo aquí:
+      </p>
+      <a
+        href="https://www.turismoraraz.com.pe/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="disclaimer-link"
+        id="disclaimer-official-link"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        www.turismoraraz.com.pe
+      </a>
+      <p class="disclaimer-note">Este sitio es una versión no oficial basada en <strong>PeruServer</strong>.</p>
+      <button id="disclaimer-close" class="disclaimer-btn" autofocus>Entendido, continuar</button>
+    </div>
+  </div>
+
   <div class="page-orbs" aria-hidden="true"></div>
 
   <header id="site-header" class="site-header"></header>
@@ -36,6 +71,23 @@
   <footer id="site-footer" class="site-footer"></footer>
   <div id="site-toast" class="toast" aria-live="polite" aria-atomic="true"></div>
 
+  <script>
+    (function () {
+      var overlay = document.getElementById('disclaimer-overlay');
+      var btn = document.getElementById('disclaimer-close');
+      function closeDisclaimer() {
+        overlay.classList.add('is-hidden');
+        overlay.addEventListener('animationend', function () {
+          overlay.remove();
+        }, { once: true });
+      }
+      btn.addEventListener('click', closeDisclaimer);
+      // Also close if user presses Escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeDisclaimer();
+      }, { once: true });
+    })();
+  </script>
   <script type="module" src="src/app.js"></script>
 </body>
 
